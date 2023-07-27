@@ -1,0 +1,232 @@
+- hosts: all
+  tasks:
+    - name: installing wget
+      package:
+        name: wget
+        state: present
+
+    - name : Copying JDK
+      get_url:
+        url: "https://repo.huaweicloud.com/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm"
+        dest: /root/jdk-7u80-linux-x64.rpm
+      become: yes
+
+    - name : Copying Hadoop
+      get_url:
+        url: "https://archive.apache.org/dist/hadoop/common/hadoop-1.2.1/hadoop-1.2.1-1.x86_64.rpm"
+        dest: /root/hadoop-1.2.1-1.x86_64.rpm
+      become: yes
+
+    - name: Installing JDK
+      command:
+        cmd: "rpm -i /root/jdk-7u80-linux-x64.rpm"
+      become: yes
+      ignore_errors: yes
+
+    - name: Installing Hadoop
+      command:
+        cmd: "rpm -i /root/hadoop-1.2.1-1.x86_64.rpm --force"
+      become: yes
+      ignore_errors: yes
+
+- hosts: namenode
+  vars:
+    - node: name
+    - dir: '/nn'
+    - IP_Namenode: '0.0.0.0'
+    - com:
+      - "hadoop-daemon.sh stop namenode"
+      - "hadoop-daemon.sh start namenode"
+    - states:
+      - absent
+      - directory
+  tasks:
+    - name: Creating Namnode Directory
+      file:
+        path: "{{ dir }}"
+        state: "{{ item }}"
+      ignore_errors: yes
+      loop: "{{  states }}"
+
+    - name: configuring hdfs file
+      template:
+        src: "hdfs-site.xml"
+        dest: /etc/hadoop/hdfs-site.xml
+
+    - name: configuring core file
+      template:
+        src: "core-site.xml"
+        dest: /etc/hadoop/core-site.xml
+
+    - name: Formattin Namenode directory
+      shell:
+        cmd: "echo 'Y' | hadoop namenode -format"
+
+    - name: Starting Namenode
+      command:
+        cmd: "{{ item }}"
+      ignore_errors: yes
+      loop: "{{ com }}"
+
+    - name: Getting Report-1
+      command:
+        cmd: "hadoop dfsadmin -report"
+      register: d
+
+    - name: Report-1
+      debug:
+        var: d['stdout_lines']
+
+
+- hosts: datanode
+  vars:
+    - node: data
+    - dir: '/dn'
+    - states:
+      - absent
+      - directory
+    - com:
+      - "hadoop-daemon.sh stop datanode"
+      - "hadoop-daemon.sh start datanode"
+
+  tasks:
+    - set_fact:
+        keys: "{{hostvars.keys()|list}}"
+
+    - set_fact:
+        IP_Namenode: "{{hostvars[keys[0]].groups.namenode[0]}}"
+
+    - name: Creating Datanode Directory
+      file:
+        path: "{{ dir }}"
+        state: "{{ item }}"
+      ignore_errors: yes
+      loop: "{{  states }}"
+
+    - name: configuring hdfs file
+      template:
+        src: "hdfs-site.xml"
+        dest: /etc/hadoop/hdfs-site.xml
+
+    - name: configuring core file
+      template:
+        src: "core-site.xml"
+        dest: /etc/hadoop/core-site.xml
+
+    - name: Starting Datanode
+      command:
+        cmd: "{{ item }}"
+      ignore_errors: yes
+      loop: "{{ com }}"
+
+    - name: Getting Report-2
+      command:
+        cmd: "hadoop dfsadmin -report"
+      register: d
+
+    - name: Report-2
+      debug:
+        var: d['stdout_lines']
+
+
+#- hosts: client
+#  tasks:
+#    - set_fact:
+#        keys: "{{hostvars.keys()|list}}"
+#
+#    - set_fact:
+#        IP_Namenode: "{{hostvars[keys[0]].groups.namenode[0]}}"
+#
+#    - name: configuring core file
+#      template:
+#        src: "core-site.xml"
+#        dest: /etc/hadoop/core-site.xml
+
+#- hosts: jobtracker
+#  vars:
+#    - node: job
+#    - dir: '/nn'
+#    - IP_Jobtracker: '0.0.0.0'
+#    - com:
+#      - "hadoop-daemon.sh stop jobtracker"
+#      - "hadoop-daemon.sh start jobtracker"
+#    - states:
+#      - absent
+#      - directory
+#  tasks:
+#    - set_fact:
+#        keys: "{{hostvars.keys()|list}}"
+#
+#    - set_fact:
+#        IP_Namenode: "{{hostvars[keys[0]].groups.namenode[0]}}"
+#
+#    - name: configuring mapred file
+#      template:
+#        src: "mapred-site.xml"
+#        dest: /etc/hadoop/mapred-site.xml
+#
+#    - name: configuring core file
+#      template:
+#        src: "core-site.xml"
+#        dest: /etc/hadoop/core-site.xml
+#
+#    - name: Starting Jobtracker
+#      command:
+#        cmd: "{{ item }}"
+#      ignore_errors: yes
+#      loop: "{{ com }}"
+#
+#    - name: Getting Report-1
+#      command:
+#        cmd: "hadoop dfsadmin -report"
+#      register: d
+#
+#    - name: Report-1
+#      debug:
+#        var: d['stdout_lines']
+#
+
+- hosts: tasktracker
+  vars:
+    - node: job
+    - dir: '/nn'
+    - com:
+      - "hadoop-daemon.sh stop tasktracker"
+      - "hadoop-daemon.sh start tasktracker"
+    - states:
+      - absent
+      - directory
+  tasks:
+    - set_fact:
+        keys: "{{hostvars.keys()|list}}"
+
+    - set_fact:
+        IP_Namenode: "{{hostvars[keys[0]].groups.namenode[0]}}"
+
+    - set_fact:
+        IP_Jobtracker: "{{hostvars[keys[0]].groups.jobtracker[0]}}"
+
+    - name: configuring mapred file
+      template:
+        src: "mapred-site.xml"
+        dest: /etc/hadoop/mapred-site.xml
+
+    - name: configuring core file
+      template:
+        src: "core-site.xml"
+        dest: /etc/hadoop/core-site.xml
+
+    - name: Starting Tasktracker
+      command:
+        cmd: "{{ item }}"
+      ignore_errors: yes
+      loop: "{{ com }}"
+
+    - name: Getting Report-1
+      command:
+        cmd: "hadoop dfsadmin -report"
+      register: d
+
+    - name: Report-1
+      debug:
+        var: d['stdout_lines']

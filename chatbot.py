@@ -1,7 +1,7 @@
 import openai
 def bot():
     # Set your OpenAI API key
-    mykey = "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"
+    mykey = "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"
     openai.api_key = mykey
     while True:
             # Create the message input for OpenAI Chat API

@@ -8,10 +8,10 @@ def docker_install(T):
         if 'not installed' in output[1]:
             sleep(1)
             os.system('tput setaf 3')
-            sb.call("echo 'Downloading docker, please wait ...'", shell=True)
-            sb.call("yum install docker -y", shell=True)
+            sb.call("sudo echo 'Downloading docker, please wait ...'", shell=True)
+            sb.call("sudo yum install docker -y", shell=True)
             sleep(1)
-            sb.call("echo 'Enabling container services...'", shell=True)
+            sb.call("sudo echo 'Enabling container services...'", shell=True)
             sb.getstatusoutput("sudo systemctl enable docker")
             sb.getstatusoutput("sudo systemctl start docker")
 
@@ -28,63 +28,63 @@ def docker_install(T):
 def status(T, ip):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("systemctl status docker", shell = True)
+        sb.call("sudo systemctl status docker", shell = True)
     else:
         os.system('ssh root@{} systemctl status docker'.format(ip))
 def pull_docker_images(T, ip, img_name):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("sudo docker pull {}".format(img_name), shell=True)
+        sb.call("sudo sudo docker pull {}".format(img_name), shell=True)
     else:
-        os.system("ssh {} docker pull {}".format(ip, img_name))
+        os.system("sudo ssh {} docker pull {}".format(ip, img_name))
 
 def show_docker_images(T, ip):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("sudo docker images", shell=True)
+        sb.call("sudo sudo docker images", shell=True)
     else:
-        os.system("ssh {} docker images".format(ip))
+        os.system("sudo ssh {} docker images".format(ip))
 
 def display_all_containers(T, ip):
     os.system('tput setaf 3')
     if  T == 'local':
-        sb.call("sudo docker ps -a", shell=True)
+        sb.call("sudo sudo docker ps -a", shell=True)
     else:
-        os.system("ssh {} docker ps -a".format(ip))
+        os.system("sudo ssh {} docker ps -a".format(ip))
 
 def run_docker_container(T,ip, os_name,version, title):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("sudo docker run -it --privileged --name {} {}:{}".format(title, os_name, version), shell=True)
+        sb.call("sudo sudo docker run -it --privileged --name {} {}:{}".format(title, os_name, version), shell=True)
     else:
-        os.system("ssh -t {} docker run -it --name {} {}".format(ip, title, os_name))
+        os.system("sudo ssh -t {} docker run -it --name {} {}".format(ip, title, os_name))
 
 def run_detached_container(T,image, version, os_name):
     os.system('tput setaf 3')
-    sb.call("sudo docker run -dit --privileged --name {} {}".format(os_name, image+':'+version), shell = True)
+    sb.call("sudo sudo docker run -dit --privileged --name {} {}".format(os_name, image+':'+version), shell = True)
 
 def remove_all_containers(T, ip):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("sudo docker rm `docker ps -a -q`", shell=True)
+        sb.call("sudo sudo docker rm `docker ps -a -q`", shell=True)
     else:
         sb.call('ssh {} "docker rm `docker ps -a -q`"'.format(ip), shell = True)
 
 def remove_one_container(T, ip, id):
     os.system('tput setaf 3')
     if T == 'local':
-        os.system("sudo docker rm id {}".format(id))
+        os.system("sudo sudo docker rm id {}".format(id))
         print("Successfully Removed {}".format(id))
     else:
-        os.system("ssh {} docker rm id {}".format(ip, id))
-        os.system("ssh {} echo 'Successfully Removed!'".format(ip))    
+        os.system("sudo ssh {} docker rm id {}".format(ip, id))
+        os.system("sudo ssh {} echo 'Successfully Removed!'".format(ip))    
 
 def docker_info(T, ip):
     os.system('tput setaf 3')
     if T == 'local':
-        sb.call("sudo docker info", shell = True)
+        sb.call("sudo sudo docker info", shell = True)
     else:
-        os.system("ssh {} docker info".format(ip))        
+        os.system("sudo ssh {} docker info".format(ip))        
 
 
 
@@ -109,7 +109,7 @@ def docker(T, ip):
                    11. Main Menu
                 -----------------------------------------------------
             """)
-        os.system("tput setaf 2")
+        os.system("sudo tput setaf 2")
         ch  = ""
         while ch == "":
             ch = input("Enter choice : ")
@@ -146,7 +146,7 @@ def docker(T, ip):
             os_name = input('Enter Image name: ')
             version = input('Enter os version :')
             title = input('Enter OS  name : ')
-            run_docker_container(T, ip, os_name,version,title)
+            run_detached_container(T, ip, os_name,version,title)
 
         elif ch == 9:
             id = input("Enter the  os name/ID: ")
@@ -154,10 +154,10 @@ def docker(T, ip):
         elif ch == 10:
             remove_all_containers(T, ip)
         elif ch == 11:
-            os.system("clear")
+            os.system("sudo clear")
             break
         else:
-            os.system("tput setaf 1")
+            os.system("sudo tput setaf 1")
             print("Invalid Input!")
 
 

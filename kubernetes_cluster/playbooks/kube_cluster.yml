@@ -1,0 +1,18 @@
+
+- name: Configuring common dependencies
+  hosts: master, workers
+  become: yes
+  roles:
+    - common-dependencies-cluster
+- name: Configuring Master
+  hosts: master
+  become: yes
+  roles:
+    - master-node
+
+- name: Configuring Worker
+  hosts: workers
+  become: yes
+  roles:
+    - worker-node
+

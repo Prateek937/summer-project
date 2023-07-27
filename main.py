@@ -8,7 +8,8 @@ import cv
 import aws 
 import chatbot
 import texttospeech
-
+import kubernetes
+import train_your_model
 os.system("tput setaf 6")
 os.system("clear")
 operating_sys = input("Where u want to run prog ? (local/Remote) : ")
@@ -31,7 +32,9 @@ while True:
             5. Apache httpd Server
             6. Polly
             7. Computer Vision
-            8. Seek help
+            8. Kubernetes
+            9. Train Your Model
+            10. Seek help
             11.Exit 
         -----------------------------------------------------   
         """)
@@ -69,7 +72,11 @@ while True:
         elif choice == 7:
             cv.cv()
         elif choice == 8:
+            kubernetes.kubernetes()
+        elif choice == 10:
             chatbot.bot()
+        elif choice == 9:
+            train_your_model.train_your_model()
         elif choice == 11:
             exit()
         else:

@@ -1,0 +1,53 @@
+---
+# tasks file for roles/master-node
+
+#- shell: yum install kubeadm kubelet kubectl -y --disableexcludes=kubernetes
+
+- name: pulling kubeadm config imge
+  shell: kubeadm config images pull
+
+- name: Initializing the Master Node
+  shell: "kubeadm init --pod-network-cidr=10.244.0.0/16  --ignore-preflight-errors=NumCPU --ignore-preflight-errors=Mem"
+  ignore_errors: yes
+  register: init 
+    
+- name: Creating .kube directory
+  file:
+    path: "{{ kube_directory }}"
+    state: directory
+
+- name: Creating .kube directory
+  file:
+    path: /home/ec2-user/.kube
+    state: directory
+
+- name: Copying admin.conf
+  shell: "cp -f {{  admin_conf  }} {{  kube_config  }}"
+
+- name: Copying admin.conf
+  shell: "cp -f {{  admin_conf  }} /home/ec2-user/.kube/config"
+    
+- name: Changing owner permission
+  shell: "sudo chown $(id -u):$(id -g) {{ kube_config }}"
+
+- name: Wait for the kube-apiserver to start
+  shell: "kubectl get nodes"
+  register: kubectl
+  until: kubectl.stdout.find('Ready') != -1
+  retries: 10
+  delay: 10
+  
+- name: Configuring flannel
+  shell: sudo kubectl apply  -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml 
+  become: yes
+  ignore_errors: yes
+
+- name: Generating token
+  shell: "kubeadm token create  --print-join-command"
+  register: token
+
+- name: add variables to dummy host
+  add_host:
+    name: "variable_holder"
+    shared_variable:  "{{ token }}"
+
