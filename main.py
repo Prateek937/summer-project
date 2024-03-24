@@ -12,7 +12,7 @@ import kubernetes
 import train_your_model
 os.system("tput setaf 6")
 os.system("clear")
-operating_sys = input("Where u want to run prog ? (local/Remote) : ")
+operating_sys = input("Where u want to run the program ? (local/Remote) : ")
 if operating_sys == 'remote':
     ip = input("Enter remote IP : ")
 else:
