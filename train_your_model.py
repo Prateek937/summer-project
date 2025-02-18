@@ -111,4 +111,3 @@ def train_your_model():
             print("Coefficient: ", model.coef_)
             print("Mean Absolute Error: ", mean_absolute_error(y_test,y_pred))
 
-train_your_model()
